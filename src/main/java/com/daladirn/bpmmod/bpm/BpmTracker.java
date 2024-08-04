@@ -3,7 +3,6 @@ package com.daladirn.bpmmod.bpm;
 import com.daladirn.bpmmod.events.PacketSentEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
-import net.minecraft.block.BlockPotato;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
@@ -36,7 +35,6 @@ public class BpmTracker {
         MEASURED_BLOCKS.put(Blocks.cactus, null);
         MEASURED_BLOCKS.put(Blocks.reeds, null);
     }
-
 
     @SubscribeEvent
     public void PacketSentEvent(PacketSentEvent packetEvent) {

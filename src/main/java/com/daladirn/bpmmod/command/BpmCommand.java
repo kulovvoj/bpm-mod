@@ -4,11 +4,15 @@ import com.daladirn.bpmmod.BpmMod;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
 
 import java.util.List;
 
 public class BpmCommand extends CommandBase {
+    private final BpmMod bpmMod;
+    public BpmCommand(BpmMod bpmMod) {
+        this.bpmMod = bpmMod;
+    }
+
 
     @Override
     public String getCommandName() {
@@ -29,7 +33,10 @@ public class BpmCommand extends CommandBase {
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("reset")) {
             BpmMod.bpmTracker.reset();
-            sender.addChatMessage(new ChatComponentText("Resetting!"));
+        } else if (args.length > 0 && args[0].equalsIgnoreCase("enable")) {
+            bpmMod.registerHandlers();
+        } else if (args.length > 0 && args[0].equalsIgnoreCase("disable")) {
+            bpmMod.unregisterHandlers();
         }
     }
 

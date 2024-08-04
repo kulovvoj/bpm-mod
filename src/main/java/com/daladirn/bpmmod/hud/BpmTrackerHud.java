@@ -22,12 +22,9 @@ public class BpmTrackerHud {
     }
 
     private void drawHUD(ScaledResolution resolution) {
-
         // when drawing a HUD, the coordinates (x, y) represent a point on your screen
         // coordinates (0, 0) is top left of your screen,
         // coordinates (screenWidth, screenHeight) is bottom right of your screen
-        final int top = 0;
-        final int left = 0;
         final int bottom = resolution.getScaledHeight();
         final int right = resolution.getScaledWidth();
         String bpsText;
