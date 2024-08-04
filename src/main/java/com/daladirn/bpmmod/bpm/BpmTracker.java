@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class BpmTracker {
     private final Map<Block, Integer> MEASURED_BLOCKS = new HashMap<Block, Integer>();
-    private long BlocksBroken = 0;
+    private long blocksBroken = 0;
     private Instant startTime;
     private Instant lastBrokenTime;
 
@@ -43,26 +43,44 @@ public class BpmTracker {
             return;
 
         BlockPos position = ((C07PacketPlayerDigging) packet).getPosition();
-        IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
-        if (!MEASURED_BLOCKS.containsKey(blockState.getBlock())) return;
-        if (MEASURED_BLOCKS.get(blockState.getBlock()) != null && MEASURED_BLOCKS.get(blockState.getBlock()) != blockState.getProperties().get(BlockCrops.AGE)) return;
+        if (!isBlockFarmable(position)) return;
 
         if (startTime == null) {
             startTime = Instant.now();
         }
         lastBrokenTime = Instant.now();
-        BlocksBroken++;
+        blocksBroken++;
+
+        new java.util.Timer().schedule(
+            new java.util.TimerTask() {
+                @Override
+                public void run() {
+                    if (isBlockFarmable(position)) blocksBroken--;
+                }
+            },
+            500
+        );
+    }
+
+    public boolean isBlockFarmable(BlockPos position) {
+        IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
+        return
+            MEASURED_BLOCKS.containsKey(blockState.getBlock()) &&
+            (
+                MEASURED_BLOCKS.get(blockState.getBlock()) == null ||
+                MEASURED_BLOCKS.get(blockState.getBlock()) == blockState.getProperties().get(BlockCrops.AGE)
+            );
     }
 
     public void reset() {
-        BlocksBroken = 0;
+        blocksBroken = 0;
         startTime = null;
         lastBrokenTime = null;
     }
 
     public Double getBlockPerSecond() {
         if (startTime == null || lastBrokenTime == null) return null;
-        return (double) (BlocksBroken * 1000) / Duration.between(startTime, lastBrokenTime).toMillis();
+        return (double) (blocksBroken * 1000) / Duration.between(startTime, lastBrokenTime).toMillis();
     }
 
     public Long getTimeElapsed() {
