@@ -1,0 +1,16 @@
+[
+  {
+    "name": "${mod_name}",
+    "modid": "${mod_id}",
+    "description": "${mod_description}",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": "${mod_author}",
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

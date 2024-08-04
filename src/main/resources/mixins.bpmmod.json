@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "minVersion": "0.7.10",
+    "package": "com.daladirn.bpmmod.mixins.transformers",
+    "refmap": "refmap.bpmmod.json",
+    "verbose": true,
+    "target": "@env(DEFAULT)",
+    "compatibilityLevel": "JAVA_8",
+    "mixins": [
+        "MixinNetHandlerPlayClient"
+    ]
+}
