@@ -15,9 +15,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class BpmTracker {
     private final Map<Block, Integer> MEASURED_BLOCKS = new HashMap<Block, Integer>();
+    private final Map<BlockPos, Timer> farmedBlocks = new HashMap<BlockPos, Timer>();
     private long blocksBroken = 0;
     private Instant startTime;
     private Instant lastBrokenTime;
@@ -43,6 +46,7 @@ public class BpmTracker {
             return;
 
         BlockPos position = ((C07PacketPlayerDigging) packet).getPosition();
+        if (farmedBlocks.containsKey(position)) return;
         if (!isBlockFarmable(position)) return;
 
         if (startTime == null) {
@@ -51,15 +55,17 @@ public class BpmTracker {
         lastBrokenTime = Instant.now();
         blocksBroken++;
 
-        new java.util.Timer().schedule(
-            new java.util.TimerTask() {
+        Timer timer = new Timer();
+        timer.schedule(
+            new TimerTask() {
                 @Override
                 public void run() {
-                    if (isBlockFarmable(position)) blocksBroken--;
+                    farmedBlocks.remove(position);
                 }
             },
             500
         );
+        farmedBlocks.put(position, timer);
     }
 
     public boolean isBlockFarmable(BlockPos position) {
@@ -73,6 +79,8 @@ public class BpmTracker {
     }
 
     public void reset() {
+        farmedBlocks.values().forEach(Timer::cancel);
+        farmedBlocks.clear();
         blocksBroken = 0;
         startTime = null;
         lastBrokenTime = null;
