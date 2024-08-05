@@ -15,7 +15,7 @@ public class BpmMod {
     public static final BpmTracker bpmTracker = new BpmTracker();
     public static final BpmTrackerHud hud = new BpmTrackerHud();
     public static final String MODID = "bpmmod";
-    public static final String VERSION = "0.0.1-1.8.9";
+    public static final String VERSION = "0.0.2-1.8.9";
     public static final String NAME = "BPM Mod";
 
     @EventHandler
