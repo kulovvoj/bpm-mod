@@ -1,5 +1,7 @@
 package com.daladirn.bpmmod.bpm;
 
+import com.daladirn.bpmmod.BpmMod;
+import com.daladirn.bpmmod.chat.BpmChat;
 import com.daladirn.bpmmod.events.PacketSentEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCrops;
@@ -84,6 +86,7 @@ public class BpmTracker {
         blocksBroken = 0;
         startTime = null;
         lastBrokenTime = null;
+        BpmMod.bpmChat.chat("The tracker has been reset");
     }
 
     public Double getBlockPerSecond() {

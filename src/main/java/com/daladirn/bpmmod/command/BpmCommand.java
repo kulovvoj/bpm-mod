@@ -34,9 +34,17 @@ public class BpmCommand extends CommandBase {
         if (args.length > 0 && args[0].equalsIgnoreCase("reset")) {
             BpmMod.bpmTracker.reset();
         } else if (args.length > 0 && args[0].equalsIgnoreCase("enable")) {
-            bpmMod.registerHandlers();
+            bpmMod.enable();
         } else if (args.length > 0 && args[0].equalsIgnoreCase("disable")) {
-            bpmMod.unregisterHandlers();
+            bpmMod.disable();
+        }
+
+        if (BpmMod.isEnabled) {
+            if (args.length > 1 && args[0].equalsIgnoreCase("mouse") && args[1].equalsIgnoreCase("lock")) {
+                if (!BpmMod.bpmMouseLock.isMouseLocked) BpmMod.bpmMouseLock.toggle();
+            } else if (args.length > 1 && args[0].equalsIgnoreCase("mouse") && args[1].equalsIgnoreCase("unlock")) {
+                if (BpmMod.bpmMouseLock.isMouseLocked) BpmMod.bpmMouseLock.toggle();
+            }
         }
     }
 
