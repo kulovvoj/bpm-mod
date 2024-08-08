@@ -8,12 +8,21 @@ The tracker will start tracking when you first hit a crop. Afterward, it keeps t
 
 # Commands
 
-- **/bpm reset**
-    - resets the counter
-- **/bpm enable**
-    - turns on the mod
-- **/bpm disable**
-    - turns off the mod
+- ***/bpm enable***
+  - turns on the mod
+- ***/bpm disable***
+  - turns off the mod
+- ***/bpm reset***
+  - resets the counter
+- ***/bpm mouse lock***
+  - locks mouse movement
+- ***/bpm mouse unlock***
+  - unlocks mouse movement
+
+# Keybindings
+
+- ***Toggle mouse lock***
+  - Defaulted to **[L] key** 
 
 # JAR
 
