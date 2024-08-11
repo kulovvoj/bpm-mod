@@ -23,7 +23,7 @@ public class BpmMod {
     public static final BpmMouseLock bpmMouseLock = new BpmMouseLock();
     public static final BpmChat bpmChat = new BpmChat();
     public static final String MODID = "bpmmod";
-    public static final String VERSION = "0.0.2-1.8.9";
+    public static final String VERSION = "0.0.4-1.8.9";
     public static final String NAME = "BPM Mod";
     public static boolean isEnabled = false;
 
