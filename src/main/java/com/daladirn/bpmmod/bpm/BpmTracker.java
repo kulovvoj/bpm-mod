@@ -1,10 +1,12 @@
 package com.daladirn.bpmmod.bpm;
 
 import com.daladirn.bpmmod.BpmMod;
-import com.daladirn.bpmmod.chat.BpmChat;
 import com.daladirn.bpmmod.events.PacketSentEvent;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockCocoa;
 import net.minecraft.block.BlockCrops;
+import net.minecraft.block.BlockNetherWart;
+import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
@@ -21,18 +23,18 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class BpmTracker {
-    private final Map<Block, Integer> MEASURED_BLOCKS = new HashMap<Block, Integer>();
+    private final Map<Block, PropertyInteger> MEASURED_BLOCKS = new HashMap<Block, PropertyInteger>();
     private final Map<BlockPos, Timer> farmedBlocks = new HashMap<BlockPos, Timer>();
     private long blocksBroken = 0;
     private Instant startTime;
     private Instant lastBrokenTime;
 
     public BpmTracker() {
-        MEASURED_BLOCKS.put(Blocks.wheat, 7);
-        MEASURED_BLOCKS.put(Blocks.carrots, 7);
-        MEASURED_BLOCKS.put(Blocks.potatoes, 7);
-        MEASURED_BLOCKS.put(Blocks.nether_wart, 3);
-        MEASURED_BLOCKS.put(Blocks.cocoa, 2);
+        MEASURED_BLOCKS.put(Blocks.wheat, BlockCrops.AGE);
+        MEASURED_BLOCKS.put(Blocks.carrots, BlockCrops.AGE);
+        MEASURED_BLOCKS.put(Blocks.potatoes, BlockCrops.AGE);
+        MEASURED_BLOCKS.put(Blocks.nether_wart, BlockNetherWart.AGE);
+        MEASURED_BLOCKS.put(Blocks.cocoa, BlockCocoa.AGE);
         MEASURED_BLOCKS.put(Blocks.melon_block, null);
         MEASURED_BLOCKS.put(Blocks.pumpkin, null);
         MEASURED_BLOCKS.put(Blocks.brown_mushroom, null);
@@ -72,12 +74,11 @@ public class BpmTracker {
 
     public boolean isBlockFarmable(BlockPos position) {
         IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
-        return
-            MEASURED_BLOCKS.containsKey(blockState.getBlock()) &&
-            (
-                MEASURED_BLOCKS.get(blockState.getBlock()) == null ||
-                MEASURED_BLOCKS.get(blockState.getBlock()) == blockState.getProperties().get(BlockCrops.AGE)
-            );
+        if (!MEASURED_BLOCKS.containsKey(blockState.getBlock())) return false;
+        if (MEASURED_BLOCKS.get(blockState.getBlock()) == null) return true;
+        Integer ripeAge = MEASURED_BLOCKS.get(blockState.getBlock()).getAllowedValues().stream().reduce(null, (acc, age) -> acc == null || age > acc ? age : acc);
+        Comparable<?> cropAge = blockState.getProperties().get(MEASURED_BLOCKS.get(blockState.getBlock()));
+        return cropAge.equals(ripeAge);
     }
 
     public void reset() {
