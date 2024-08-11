@@ -1,3 +1,6 @@
+# v0.0.4
+- fixed an issue where the addon didn't detect nether wart and cocoa being broken
+
 # v0.0.3
 - added mouse locking functionality
 
