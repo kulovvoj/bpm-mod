@@ -17,15 +17,15 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class BpmTracker {
     private final Map<Block, PropertyInteger> MEASURED_BLOCKS = new HashMap<Block, PropertyInteger>();
     private final Map<BlockPos, Timer> farmedBlocks = new HashMap<BlockPos, Timer>();
+    private final Map<BlockPos, Timer> connectedFarmedBlocks = new HashMap<BlockPos, Timer>();
     private long blocksBroken = 0;
+    private long cropsFarmed = 0;
+    private long cropsFarmedWithoutRespawns = 0;
     private Instant startTime;
     private Instant lastBrokenTime;
 
@@ -50,29 +50,67 @@ public class BpmTracker {
             return;
 
         BlockPos position = ((C07PacketPlayerDigging) packet).getPosition();
-        if (farmedBlocks.containsKey(position)) return;
+        if (farmedBlocks.containsKey(position) || connectedFarmedBlocks.containsKey(position)) return;
         if (!isBlockFarmable(position)) return;
 
         if (startTime == null) {
             startTime = Instant.now();
         }
         lastBrokenTime = Instant.now();
-        blocksBroken++;
+        handleFarmedBlock(position);
+        handleConnectedBlocks(position);
+    }
 
+    private void handleConnectedBlocks(BlockPos position) {
+        IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
+        if (blockState.getBlock() == null) return;
+        Block originalBlock = blockState.getBlock();
+        if (originalBlock != Blocks.reeds || originalBlock != Blocks.cactus) {
+            handleConnectedReedsAndCactus(position, originalBlock);
+        }
+    }
+
+    private void handleConnectedReedsAndCactus(BlockPos position, Block originalBlock) {
+        BlockPos positionAbove = position.add(0,1,0);
+        if (!isBlockFarmable(positionAbove, originalBlock)) return;
+        handleConnectedReedsAndCactus(positionAbove, originalBlock);
+
+        cropsFarmed++;
+        cropsFarmedWithoutRespawns++;
         Timer timer = new Timer();
         timer.schedule(
-            new TimerTask() {
-                @Override
-                public void run() {
-                    farmedBlocks.remove(position);
-                }
-            },
-            500
+                new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (isBlockFarmable(positionAbove, originalBlock)) cropsFarmedWithoutRespawns--;
+                        farmedBlocks.remove(positionAbove);
+                    }
+                },
+                500
+        );
+        farmedBlocks.put(positionAbove, timer);
+    }
+
+    private void handleFarmedBlock(BlockPos position) {
+        blocksBroken++;
+
+        cropsFarmed++;
+        cropsFarmedWithoutRespawns++;
+        Timer timer = new Timer();
+        timer.schedule(
+                new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (isBlockFarmable(position)) cropsFarmedWithoutRespawns--;
+                        farmedBlocks.remove(position);
+                    }
+                },
+                500
         );
         farmedBlocks.put(position, timer);
     }
 
-    public boolean isBlockFarmable(BlockPos position) {
+    private boolean isBlockFarmable(BlockPos position) {
         IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
         if (!MEASURED_BLOCKS.containsKey(blockState.getBlock())) return false;
         if (MEASURED_BLOCKS.get(blockState.getBlock()) == null) return true;
@@ -81,22 +119,45 @@ public class BpmTracker {
         return cropAge.equals(ripeAge);
     }
 
+    private boolean isBlockFarmable(BlockPos position, Block cropType) {
+        IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
+        return cropType.equals(blockState.getBlock());
+    }
+
     public void reset() {
         farmedBlocks.values().forEach(Timer::cancel);
         farmedBlocks.clear();
         blocksBroken = 0;
+        cropsFarmed = 0;
+        cropsFarmedWithoutRespawns = 0;
         startTime = null;
         lastBrokenTime = null;
         BpmMod.bpmChat.chat("The tracker has been reset");
     }
 
-    public Double getBlockPerSecond() {
+    public Double getBlocksPerSecond() {
         if (startTime == null || lastBrokenTime == null) return null;
         return (double) (blocksBroken * 1000) / Duration.between(startTime, lastBrokenTime).toMillis();
     }
 
+    public Double getCropsPerSecond() {
+        if (startTime == null || lastBrokenTime == null) return null;
+        return (double) (cropsFarmed * 1000) / Duration.between(startTime, lastBrokenTime).toMillis();
+    }
+
+
     public Long getTimeElapsed() {
         if (startTime == null || lastBrokenTime == null) return null;
         return Duration.between(startTime, lastBrokenTime).toMillis();
+    }
+
+    public long getBlocksBroken() {
+        return blocksBroken;
+    }
+    public long getCropsFarmed() {
+        return cropsFarmed;
+    }
+    public long getCropsFarmedWithoutRespawns() {
+        return cropsFarmedWithoutRespawns;
     }
 }

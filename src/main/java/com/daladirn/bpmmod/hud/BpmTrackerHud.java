@@ -2,13 +2,20 @@ package com.daladirn.bpmmod.hud;
 
 import com.daladirn.bpmmod.BpmMod;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class BpmTrackerHud {
 
@@ -22,26 +29,31 @@ public class BpmTrackerHud {
     }
 
     private void drawHUD(ScaledResolution resolution) {
-        // when drawing a HUD, the coordinates (x, y) represent a point on your screen
-        // coordinates (0, 0) is top left of your screen,
-        // coordinates (screenWidth, screenHeight) is bottom right of your screen
-        final int bottom = resolution.getScaledHeight();
-        final int right = resolution.getScaledWidth();
         String bpsText;
+        String cpsText = null;
         String timeElapsedText = null;
+        String cropsFarmedText = null;
+        String cropsFarmedWithoutRespawnsText = null;
+        String pingText = null;
 
-        final FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
-
-        // for example here we draw text on the screen
         DecimalFormat df = new DecimalFormat("#0.00");
-        Double bps = BpmMod.bpmTracker.getBlockPerSecond();
+        Double bps = BpmMod.bpmTracker.getBlocksPerSecond();
+        Double cps = BpmMod.bpmTracker.getCropsPerSecond();
+        Long timeElapsed = BpmMod.bpmTracker.getTimeElapsed();
+        long blocksBroken = BpmMod.bpmTracker.getBlocksBroken();
+        long cropsFarmed = BpmMod.bpmTracker.getCropsFarmed();
+        long cropsFarmedWithoutRespawns = BpmMod.bpmTracker.getCropsFarmedWithoutRespawns();
+
         if (bps != null) {
-            bpsText = df.format(BpmMod.bpmTracker.getBlockPerSecond()) + " BPS";
+            bpsText = df.format(bps) + " BPS";
         } else {
             bpsText = "Hit a crop to start";
         }
 
-        Long timeElapsed = BpmMod.bpmTracker.getTimeElapsed();
+        if (bps != null && blocksBroken != cropsFarmed) {
+            cpsText = (df.format(cps) + " CPS");
+        }
+
         if (timeElapsed != null) {
             timeElapsedText = String.format("%02dh %02dm %02ds",
                     TimeUnit.MILLISECONDS.toHours(timeElapsed),
@@ -51,9 +63,43 @@ public class BpmTrackerHud {
             );
         }
 
-        fr.drawStringWithShadow(bpsText, 9.5f * right / 10f - fr.getStringWidth(bpsText), 9 * bottom / 10f, 0xFFFFFF);
-        if (timeElapsedText != null)
-            fr.drawStringWithShadow(timeElapsedText, 9.5f * right / 10f  - fr.getStringWidth(timeElapsedText), (9 * bottom + 100) / 10f, 0xFFFFFF);
+        if (bps != null) {
+            cropsFarmedText = String.format("%01d crops", cropsFarmed);
+        }
+        if (bps != null) {
+            cropsFarmedWithoutRespawnsText = String.format("%01d crops without respawns", cropsFarmedWithoutRespawns);
+        }
+
+        Integer ping = this.getPlayerResponseTime();
+        if (ping != null) {
+            pingText = String.format("Ping: %01dms", ping);
+        }
+
+        drawStrings(resolution, Arrays.asList(bpsText, cpsText, timeElapsedText, cropsFarmedText, cropsFarmedWithoutRespawnsText, pingText));
     }
 
+    private Integer getPlayerResponseTime() {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (minecraft == null) return null;
+        EntityPlayerSP player = minecraft.thePlayer;
+        if (player == null || player.sendQueue == null) return null;
+        NetworkPlayerInfo networkPlayerInfo = player.sendQueue.getPlayerInfo(player.getGameProfile().getId());
+        if (networkPlayerInfo == null) return null;
+
+        return networkPlayerInfo.getResponseTime();
+    }
+
+    private void drawStrings(ScaledResolution resolution, List<String> strings) {
+        // when drawing a HUD, the coordinates (x, y) represent a point on your screen
+        // coordinates (0, 0) is top left of your screen,
+        final int bottom = resolution.getScaledHeight();
+        final int right = resolution.getScaledWidth();
+        final FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
+        List<String> filteredStrings = strings.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+        IntStream.range(0, filteredStrings.size())
+            .forEach(idx -> {
+                fr.drawStringWithShadow(filteredStrings.get(idx), 9.5f * right / 10f  - fr.getStringWidth(filteredStrings.get(idx)), (8f * bottom) / 10f + idx * fr.FONT_HEIGHT, 0xFFFFFF);
+            });
+    }
 }
