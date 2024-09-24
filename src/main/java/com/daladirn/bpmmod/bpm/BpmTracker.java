@@ -65,7 +65,7 @@ public class BpmTracker {
         IBlockState blockState = Minecraft.getMinecraft().theWorld.getBlockState(position);
         if (blockState.getBlock() == null) return;
         Block originalBlock = blockState.getBlock();
-        if (originalBlock != Blocks.reeds || originalBlock != Blocks.cactus) {
+        if (originalBlock == Blocks.reeds || originalBlock == Blocks.cactus) {
             handleConnectedReedsAndCactus(position, originalBlock);
         }
     }

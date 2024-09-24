@@ -43,6 +43,9 @@ public class BpmTrackerHud {
         long blocksBroken = BpmMod.bpmTracker.getBlocksBroken();
         long cropsFarmed = BpmMod.bpmTracker.getCropsFarmed();
         long cropsFarmedWithoutRespawns = BpmMod.bpmTracker.getCropsFarmedWithoutRespawns();
+        float rotationYaw = Minecraft.getMinecraft().thePlayer.rotationYaw;
+        float yaw = rotationYaw % 360 > 180 ? rotationYaw % 360 - 360 : rotationYaw % 360;
+        float pitch = Minecraft.getMinecraft().thePlayer.rotationPitch;
 
         if (bps != null) {
             bpsText = df.format(bps) + " BPS";
@@ -75,7 +78,7 @@ public class BpmTrackerHud {
             pingText = String.format("Ping: %01dms", ping);
         }
 
-        drawStrings(resolution, Arrays.asList(bpsText, cpsText, timeElapsedText, cropsFarmedText, cropsFarmedWithoutRespawnsText, pingText));
+        drawStrings(resolution, Arrays.asList(bpsText, cpsText, timeElapsedText, cropsFarmedText, cropsFarmedWithoutRespawnsText, pingText, "Yaw: " + df.format(yaw > 180 ? yaw - 360 : yaw), "Pitch: " + df.format(pitch)));
     }
 
     private Integer getPlayerResponseTime() {
